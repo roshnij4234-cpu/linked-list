@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Simulator</title>
+    <style>
+        :root {
+            --node-color: #4a90e2;
+            --head-color: #f5a623;
+            --null-color: #9b9b9b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100px;
+        }
+
+        button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--node-color);
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        button.delete {
+            background-color: #e94b35;
+        }
+
+        .list-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            overflow-x: auto;
+            padding: 40px;
+            min-height: 200px;
+        }
+
+        .node-wrapper {
+            display: flex;
+            align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .node {
+            border: 2px solid #333;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            min-width: 80px;
+            position: relative;
+        }
+
+        .node-data {
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 2px solid #333;
+        }
+
+        .node-next {
+            padding: 5px;
+            text-align: center;
+            font-size: 0.8em;
+            background: #eee;
+        }
+
+        .arrow {
+            font-size: 24px;
+            margin: 0 10px;
+            color: #333;
+        }
+
+        .label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8em;
+            font-weight: bold;
+            color: var(--head-color);
+        }
+
+        .null-node {
+            color: var(--null-color);
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Linked List Simulator</h1>
+
+    <div class="controls">
+        <input type="text" id="nodeValue" placeholder="Value (e.g. 10)">
+        <button onclick="prependNode()">Add to Head (Prepend)</button>
+        <button onclick="appendNode()">Add to Tail (Append)</button>
+        <button class="delete" onclick="deleteHead()">Delete Head</button>
+        <button class="delete" onclick="clearList()">Clear All</button>
+    </div>
+
+    <div class="list-container" id="listDisplay">
+        <!-- Nodes will appear here -->
+    </div>
+
+    <script>
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.next = null;
+            }
+        }
+
+        class LinkedList {
+            constructor() {
+                this.head = null;
+                this.tail = null;
+                this.length = 0;
+            }
+
+            append(value) {
+                const newNode = new Node(value);
+                if (!this.head) {
+                    this.head = newNode;
+                    this.tail = newNode;
+                } else {
+                    this.tail.next = newNode;
+                    this.tail = newNode;
+                }
+                this.length++;
+                render();
+            }
+
+            prepend(value) {
+                const newNode = new Node(value);
+                if (!this.head) {
+                    this.head = newNode;
+                    this.tail = newNode;
+                } else {
+                    newNode.next = this.head;
+                    this.head = newNode;
+                }
+                this.length++;
+                render();
+            }
+
+            deleteHead() {
+                if (!this.head) return;
+                this.head = this.head.next;
+                if (!this.head) this.tail = null;
+                this.length--;
+                render();
+            }
+
+            clear() {
+                this.head = null;
+                this.tail = null;
+                this.length = 0;
+                render();
+            }
+        }
+
+        const list = new LinkedList();
+        const input = document.getElementById('nodeValue');
+        const display = document.getElementById('listDisplay');
+
+        function appendNode() {
+            if (input.value === "") return;
+            list.append(input.value);
+            input.value = "";
+            input.focus();
+        }
+
+        function prependNode() {
+            if (input.value === "") return;
+            list.prepend(input.value);
+            input.value = "";
+            input.focus();
+        }
+
+        function deleteHead() {
+            list.deleteHead();
+        }
+
+        function clearList() {
+            list.clear();
+        }
+
+        function render() {
+            display.innerHTML = '';
+            let current = list.head;
+
+            if (!current) {
+                display.innerHTML = '<div class="null-node">List is empty (Head -> NULL)</div>';
+                return;
+            }
+
+            while (current) {
+                const nodeWrapper = document.createElement('div');
+                nodeWrapper.className = 'node-wrapper';
+
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = 'node';
+
+                // Add Head/Tail Labels
+                if (current === list.head) {
+                    const label = document.createElement('div');
+                    label.className = 'label';
+                    label.innerText = 'HEAD' + (current === list.tail ? ' & TAIL' : '');
+                    nodeDiv.appendChild(label);
+                } else if (current === list.tail) {
+                    const label = document.createElement('div');
+                    label.className = 'label';
+                    label.innerText = 'TAIL';
+                    nodeDiv.appendChild(label);
+                }
+
+                nodeDiv.innerHTML += `
+                    <div class="node-data">${current.value}</div>
+                    <div class="node-next">next</div>
+                `;
+
+                nodeWrapper.appendChild(nodeDiv);
+
+                // Add Arrow
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+                arrow.innerHTML = '➔';
+                nodeWrapper.appendChild(arrow);
+
+                display.appendChild(nodeWrapper);
+                current = current.next;
+            }
+
+            const nullNode = document.createElement('div');
+            nullNode.className = 'null-node';
+            nullNode.innerText = 'NULL';
+            display.appendChild(nullNode);
+        }
+
+        // Allow "Enter" key to add nodes
+        input.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                appendNode();
+            }
+        });
+
+        // Initial render
+        render();
+    </script>
+</body>
+</html>
